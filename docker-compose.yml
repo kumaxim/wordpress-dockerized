@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+  db:
+    image: mariadb:latest
+    restart: always
+    ports:
+      - "${DB_HOST_PORT}:3306"
+    volumes:
+      - ./db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: $DB_ROOT_PASSWORD
+      MYSQL_DATABASE: $DB_NAME
+      MYSQL_USER: $DB_USER
+      MYSQL_PASSWORD: $DB_PASSWORD
+  nginx:
+    build:
+      context: ./dockerfiles
+      dockerfile: nginx
+    restart: always
+    links:
+      - wordpress:php-fpm-server
+    depends_on:
+      - wordpress
+    ports:
+      - "80:80"
+    volumes:
+      - ./wp:/var/www/wordpress:ro
+      - ./wp-theme:/var/www/wordpress/wp-content/themes/shared-theme:ro
+  wordpress:
+    build:
+      context: ./dockerfiles
+      dockerfile: php
+    restart: always
+    links:
+      - db:mysql
+    depends_on:
+      - db
+    expose:
+      - "9000"
+    volumes:
+      - ./wp/wp-config.php:/var/www/wordpress/wp-config.php:ro
+      - ./wp:/var/www/wordpress
+      - ./wp-theme:/var/www/wordpress/wp-content/themes/shared-theme
+    environment:
+      WORDPRESS_DB_NAME: $DB_NAME
+      WORDPRESS_DB_USER: $DB_USER
+      WORDPRESS_DB_PASSWORD: $DB_PASSWORD
+  nodejs:
+    build: 
+      context: ./dockerfiles
+      dockerfile: nodejs
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    depends_on:
+      - wordpress
+    volumes:
+      - ./wp-theme:/home/node/sage
+  sftp:
+    image: atmoz/sftp
+    restart: always
+    ports:
+      - "${SFTP_PORT}:22"
+    command: "${SFTP_USER}:${SFTP_PASSWORD}"
+    depends_on:
+      - nginx
+      - wordpress
+    volumes:
+      - ./wp:/home/wordpress/www

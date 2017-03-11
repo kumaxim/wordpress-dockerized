@@ -1,0 +1,15 @@
+FROM wordpress:php5.6-fpm
+LABEL maintainer "Maxim Kudryavtsev<kumaxim@users.noreply.github.com>"
+
+RUN set -xe \
+	&& useradd --no-create-home --user-group wordpress \
+	&& usermod --lock wordpress \
+	&& mkdir -p /var/www/wordpress \
+	&& chown --verbose --recursive wordpress:wordpress /var/www/wordpress \
+	# Disable cache
+	&& rm -f /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini \
+	&& rm -f /usr/local/etc/php/conf.d/opcache-recommended.ini
+
+COPY config/php-www.conf /usr/local/etc/php-fpm.d/www.conf
+
+ENTRYPOINT ["php-fpm"]

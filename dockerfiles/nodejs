@@ -1,0 +1,31 @@
+FROM node:latest
+LABEL maintainer "Maxim Kudryavtsev<kumaxim@users.noreply.github.com>"
+
+# Global required dependencies
+RUN set -xe \
+	&& npm install -g \
+		gulp \
+		bower \
+		browser-sync
+
+# Custom bash script for download & extract Sage
+COPY entrypoint.sh /usr/bin/
+
+# The bash script can't run without privileges
+RUN chmod +x /usr/bin/entrypoint.sh
+
+# The directory with Sage's files
+VOLUME /home/node/sage
+
+# User was created in the parent image
+USER node
+
+# BrowserSync ports should be exposed
+EXPOSE 3000
+EXPOSE 3001
+
+# Setup custom bash script as entry point
+ENTRYPOINT ["entrypoint.sh"]
+
+# Run BrowserSync for watching the changes
+CMD ["gulp watch"]
