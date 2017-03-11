@@ -8,4 +8,4 @@ RUN set -xe \
 	&& useradd --no-create-home --user-group wordpress \
 	&& usermod --lock wordpress
 
-COPY config/nginx-default-server.conf /etc/nginx/conf.d/default.conf
+COPY config/nginx-default.conf /etc/nginx/conf.d/default.conf
